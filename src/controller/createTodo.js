@@ -29,31 +29,58 @@ function createTodo(req, res, DB) {
 		return;
 	}
 
-	console.log(`Successful:`);
+	console.log(`Token Verification Successful:`);
 	console.log(`VerifiedToken: ${verifiedTokenString}`);
 	console.log(`By User: ${username}`);
-	
-	try {
-		DB.serialize(() => {
-			DBModules._createTable(
-				DB, "todos", true, `
-					title TEXT NOT NULL,
-					description TEXT NOT NULL,
-					byUser TEXT NOT NULL
-			`);
-			DBModules.insertTable(
-				DB,
-				"todos",
-				["title", "description", "byUser"],
-				[title, description, username]
-			);
-			console.log(DBModules.queryAllTable(DB, "todos"));
-		})
-		res.send(`Created Row`);
-	} catch(err) {
-		res.status(400).send(err);
-	}
 
+	async function insertTodoOnDB(){
+		try {
+			DB.serialize(async() => {
+				DBModules._createTable(
+					DB, "todos", true, `
+						id INTEGER PRIMARY KEY AUTOINCREMENT,
+						title TEXT NOT NULL,
+						description TEXT NOT NULL,
+						byUser TEXT NOT NULL
+				`);
+
+				const taskExists = await DBModules.queryTable(
+					DB, 
+					"todos", 
+					["title", "byUser"], 
+					[
+						{"row": "title", "value": title},
+						{"row": "byUser", "value": username}
+					]
+				);
+
+				if (taskExists) {
+					res.status(400).send("Task Already Exists\n");
+					return;
+				}
+
+				DBModules.insertTable(
+					DB,
+					"todos",
+					["title", "description", "byUser"],
+					[title, description, username]
+				);
+				console.log(DBModules.queryAllTable(DB, "todos"));
+				const row = await DBModules.queryTable(
+					DB, 
+					"todos", 
+					["id", "title", "description"], 
+					[{ "row": "title", "value": title }]
+				);
+				res.status(201).send(`Created Row: ${JSON.stringify(row)}\n`);
+			})
+		} catch(err) {
+			const message = {"message": "Malformed Request", "err": err.message}
+			res.status(400).send(JSON.stringify(message)+'\n');
+			return;
+		}
+	}
+	insertTodoOnDB();
 }
 
 module.exports = { createTodo };

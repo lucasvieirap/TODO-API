@@ -28,7 +28,7 @@ const { signJWT } = require("../services/signJWT");
 	const dehashedPasswd = dehashString(userRow.passwd, secret_key, secret_iv);
 	const userAuth = dehashedPasswd === passwd;
 	if (!userAuth) {
-		res.send("Wrong Password\n");
+		res.status(401).send("Wrong Password\n");
 		return;
 	}
 

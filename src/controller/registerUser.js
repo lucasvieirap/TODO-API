@@ -9,7 +9,7 @@ async function registerUser(req, res, DB) {
 	const { username, email, passwd } = req.body;
 
 	if (username === undefined || email === undefined || passwd === undefined) {
-		res.send(`Fields Empty`);
+		res.status(400).send(`Fields Empty\n`);
 		return;
 	}
 
@@ -22,41 +22,51 @@ async function registerUser(req, res, DB) {
 	const jwt_key = process.env.SECRET_JWT;
 	const signedJWT = signJWT(labelObject, options, jwt_key);
 
-	DB.serialize(async () => {
-		DBModules._createTable(
-			DB, "users", true, `
-				username TEXT UNIQUE NOT NULL,
-				email TEXT UNIQUE NOT NULL,
-				passwd TEXT NOT NULL
-		`);
+	async function registerUserOnDB() {
+		try {
+			DB.serialize(async () => {
+				DBModules._createTable(
+					DB, "users", true, `
+						id INTEGER PRIMARY KEY AUTOINCREMENT,
+						username TEXT UNIQUE NOT NULL,
+						email TEXT UNIQUE NOT NULL,
+						passwd TEXT NOT NULL
+				`);
 
-		const userExists = await DBModules.queryTable(
-			DB, 
-			"users", 
-			["username"], 
-			[{"row": "username", "value": username}]
-		);
+				const userExists = await DBModules.queryTable(
+					DB, 
+					"users", 
+					["username"], 
+					[{"row": "username", "value": username}]
+				);
 
-		if (userExists) {
-			console.log(userExists);
-			res.send("User Already Exists\n");
+				if (userExists) {
+					console.log(userExists);
+					res.send("User Already Exists\n");
+					return;
+				}
+
+				DBModules.insertTable(
+					DB,
+					"users",
+					["username", "email", "passwd"],
+					[username, email, hashedPasswd]
+				);
+
+				console.log(DBModules.queryAllTable(DB, "users"));
+
+				const usernameJSON = JSON.stringify(req.body.username);
+				const signedJWTJSON = JSON.stringify(signedJWT);
+				res.send(`Registed ${usernameJSON}\n${signedJWTJSON}\n`);
+
+			})
+		} catch (err) {
+			const message = {"message": "Malformed Request", "err": err.message}
+			res.status(400).send(JSON.stringify(message)+'\n');
 			return;
 		}
-
-		DBModules.insertTable(
-			DB,
-			"users",
-			["username", "email", "passwd"],
-			[username, email, hashedPasswd]
-		);
-
-		console.log(DBModules.queryAllTable(DB, "users"));
-
-		const usernameJSON = JSON.stringify(req.body.username);
-		const signedJWTJSON = JSON.stringify(signedJWT);
-		res.send(`Registed ${usernameJSON}\n${signedJWTJSON}`);
-
-	})
+	}
+	registerUserOnDB();
 };
 
 module.exports = { registerUser };

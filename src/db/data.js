@@ -31,7 +31,7 @@ async function insertTable(DB, tableName, components, values) {
 	const sql = `INSERT INTO ${tableName} (${insertValues}) VALUES(${insertPlaceholders})`;
 	console.log(sql);
 	DB.run(sql, values, function (err) {
-		if (err) {  console.error(err.message) };
+		if (err) {  console.log(err) };
 		console.log(`A Row has been Inserted (RowId: ${this.lastID})`);
 	});
 }
