@@ -52,7 +52,7 @@ function deleteTodo(req, res, DB) {
 				]
 			);
 			console.log(DBModules.queryAllTable(DB, "todos"));
-			res.status(200).send(JSON.stringify(row, undefined, 2) + '\n');
+			res.status(204).send(JSON.stringify(row, undefined, 2) + '\n');
 			return;
 		} catch (err) {
 			const message = {"message": "Malformed Request", "err": err.message}
