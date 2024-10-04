@@ -8,26 +8,18 @@ const DB = DBModules.connectToDb("./src/db/database.db", "Connected to SQLite Da
 const { auth } = require("../middlewares/auth");
 
 const { createTodo } = require("../controller/createTodo");
+const { getTodos } = require("../controller/getTodos");
+const { updateTodo } = require("../controller/updateTodo");
+const { deleteTodo } = require("../controller/deleteTodo");
 
 router.post("/todos", auth, (req, res) => { createTodo(req, res, DB) });
-
-router.get("/users", (req, res) => {
-	const table = DBModules.queryAllTable(DB, "users");
-	res.send(table);
-});
-
-router.put("/todos/:id", (req, res) => {
-	const todoId = req.params.id;
-	res.send(`Update Todo Item (ID: ${todoId})\n`);
-});
+router.put("/todos/:id", auth, (req, res) => { updateTodo(req, res, DB) });
 
 router.delete("/todos/:id", (req, res) => {
 	const todoId = req.params.id;
 	res.send(`Delete Todo Item (ID: ${todoId})\n`);
 });
 
-router.get("/todos", (req, res) => {
-	res.send("Return Todos\n");
-});
+router.get("/todos", auth, (req, res) => { getTodos(req, res, DB) });
 
 module.exports = router;

@@ -42,11 +42,19 @@ function _deleteTable(DB, tableName, constraintVar, constraintVal) {
 	console.log(sql);
 }
 
-function queryMultipleTable(DB, tableName, tableVal, options) {
-	const distinct = options?.distinct ? "DISTINCT" : "";
-	const orderBy = options?.orderBy ? "ORDER BY" : "";
-	const sql = `SELECT ${distinct} ${tableVal} FROM ${tableName} ${orderBy} ${options?.orderBy}`;
-	console.log(sql);
+function queryMultipleTable(DB, tableName, columns, constraints) {
+	return new Promise((resolve, reject) => {
+		const and = constraints.length > 1 ? "AND" : "";
+		const sql = `SELECT ${columns.map(column => column).join(", ")} FROM ${tableName} WHERE ${constraints.map(constraint => `${constraint.row} = ?`).join(` ${and} `)}`;
+		// let sql = `SELECT ${columns.map(column => column).join(", ")} FROM ${tableName}`;
+		DB.all(sql, constraints.map(constraint => constraint.value), (err, rows) => {
+			if (err) { 
+				console.log(err.message) 
+				reject(err);
+			};
+			resolve(rows);
+		})
+	})
 }
 
 async function queryTable(DB, tableName, columns, constraints) {
@@ -54,12 +62,12 @@ async function queryTable(DB, tableName, columns, constraints) {
 		const and = constraints.length > 1 ? "AND" : "";
 		const sql = `SELECT ${columns.map(column => column).join(", ")} FROM ${tableName} WHERE ${constraints.map(constraint => `${constraint.row} = ?`).join(` ${and} `)}`;
 		// let sql = `SELECT ${columns.map(column => column).join(", ")} FROM ${tableName}`;
-		DB.get(sql, constraints.map(constraint => constraint.value), (err, row) => {
+		DB.get(sql, constraints.map(constraint => constraint.value), (err, rows) => {
 			if (err) { 
 				console.log(err.message) 
 				reject(err);
 			};
-			resolve(row);
+			resolve(rows);
 		})
 	})
 }
@@ -72,9 +80,13 @@ function queryAllTable(DB, tableName) {
 	});
 }
 
-function updateTable(DB, tableName, column, newColumnVal, constraint) {
-	const sql = `UPDATE ${tableName} SET ${column} = ${newColumnVal} WHERE ${constraint.where} = ${constraint.equals}`;
+function updateTable(DB, tableName, columns, constraints) {
+	const and = constraints.length > 1 ? "AND" : "";
+	const sql = `UPDATE ${tableName} SET ${columns.map(column => `${column.row} = ${column.newValue}`)} WHERE ${constraints.map(constraint => `${constraint.row} = ${constraint.value}`).join(` ${and} `)}`;
 	console.log(sql);
+	DB.run(sql, [], function (err, row) {
+		if (err) {  return console.error(err.message) };
+	});
 }
 
-module.exports = { connectToDb, _createTable, _dropTable, insertTable, _deleteTable, queryMultipleTable, queryTable, queryAllTable };
+module.exports = { connectToDb, _createTable, _dropTable, insertTable, _deleteTable, queryMultipleTable, queryTable, queryAllTable, updateTable };
