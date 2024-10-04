@@ -8,7 +8,7 @@ function connectToDb(databasePath, printMessage) {
 	return DB;
 }
 
-function _createTable(DB, tableName, ifNotExist, components) {
+function createTable(DB, tableName, ifNotExist, components) {
 	const createIf = ifNotExist ? "IF NOT EXISTS" : "";
 	const sql = `CREATE TABLE ${createIf} ${tableName}(${components})`;
 	DB.run(sql, [], function (err) {
@@ -36,10 +36,13 @@ async function insertTable(DB, tableName, components, values) {
 	});
 }
 
-function _deleteTable(DB, tableName, constraintVar, constraintVal) {
-	const constraint = `${constraintVar} = ${constraintVal}`;
-	const sql = `DELETE FROM ${tableName} WHERE ${constraint}`;
+function deleteTable(DB, tableName, constraints) {
+	const and = constraints.length > 1 ? "AND" : "";
+	const sql = `DELETE FROM ${tableName} WHERE ${constraints.map(constraint => `${constraint.row} = ${constraint.value}`).join(` ${and} `)}`;
 	console.log(sql);
+	DB.run(sql, [], function (err, row){
+		if (err) { console.error(err.message) };
+	});
 }
 
 function queryMultipleTable(DB, tableName, columns, constraints) {
@@ -89,4 +92,4 @@ function updateTable(DB, tableName, columns, constraints) {
 	});
 }
 
-module.exports = { connectToDb, _createTable, _dropTable, insertTable, _deleteTable, queryMultipleTable, queryTable, queryAllTable, updateTable };
+module.exports = { connectToDb, createTable, _dropTable, insertTable, deleteTable, queryMultipleTable, queryTable, queryAllTable, updateTable };

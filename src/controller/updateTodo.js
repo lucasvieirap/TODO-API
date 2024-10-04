@@ -60,8 +60,6 @@ function updateTodo(req, res, DB) {
 					{"row": "id", "value": todoId},
 				]
 			);
-			console.log(object);
-			console.log(DBModules.queryAllTable(DB, "todos"));
 			res.status(200).send(JSON.stringify(row, undefined, 2) + '\n');
 			return;
 		} catch (err) {

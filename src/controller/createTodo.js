@@ -36,7 +36,7 @@ function createTodo(req, res, DB) {
 	async function insertTodoOnDB(){
 		try {
 			DB.serialize(async() => {
-				DBModules._createTable(
+				DBModules.createTable(
 					DB, "todos", true, `
 						id INTEGER PRIMARY KEY AUTOINCREMENT,
 						title TEXT NOT NULL,

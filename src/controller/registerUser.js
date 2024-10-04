@@ -25,7 +25,7 @@ async function registerUser(req, res, DB) {
 	async function registerUserOnDB() {
 		try {
 			DB.serialize(async () => {
-				DBModules._createTable(
+				DBModules.createTable(
 					DB, "users", true, `
 						id INTEGER PRIMARY KEY AUTOINCREMENT,
 						username TEXT UNIQUE NOT NULL,

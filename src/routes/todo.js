@@ -13,13 +13,8 @@ const { updateTodo } = require("../controller/updateTodo");
 const { deleteTodo } = require("../controller/deleteTodo");
 
 router.post("/todos", auth, (req, res) => { createTodo(req, res, DB) });
-router.put("/todos/:id", auth, (req, res) => { updateTodo(req, res, DB) });
-
-router.delete("/todos/:id", (req, res) => {
-	const todoId = req.params.id;
-	res.send(`Delete Todo Item (ID: ${todoId})\n`);
-});
-
 router.get("/todos", auth, (req, res) => { getTodos(req, res, DB) });
+router.put("/todos/:id", auth, (req, res) => { updateTodo(req, res, DB) });
+router.delete("/todos/:id", auth, (req, res) => { deleteTodo(req, res, DB) });
 
 module.exports = router;
