@@ -1,31 +1,10 @@
 const DBModules = require("../db/data");
-const { verifyJWT } = require("../services/verifyJWT");
+const { getInfoOnJWT } = require("../services/getInfoOnJWT");
 
 function updateTodo(req, res, DB) {
 	const todoId = req.params.id;
 	const token = req.headers.authorization;
-
-	const tokenString = token.toString();
-	const jwt_secret = process.env.SECRET_JWT;
-	const options = { expiresIn: "15m" };
-
-	const verifiedToken = verifyJWT(tokenString, options, jwt_secret);
-	const verifiedTokenString = JSON.stringify(verifiedToken);
-
-	if (!verifiedToken) {
-		res.status(401).send(JSON.stringify({"message": "Unauthorized"}));
-		return;
-	}
-
-	const username = verifiedToken?.token?.username;
-	if (!username) {
-		res.status(401).send("Error on Validation of Token\n");
-		return;
-	}
-
-	console.log(`Token Verification Successful:`);
-	console.log(`VerifiedToken: ${verifiedTokenString}`);
-	console.log(`By User: ${username}`);
+	const username = getInfoOnJWT(token, "username");
 
 	const { title, description } = req.body;
 

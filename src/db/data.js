@@ -64,6 +64,7 @@ async function queryTable(DB, tableName, columns, constraints) {
 	return new Promise((resolve, reject) => {
 		const and = constraints.length > 1 ? "AND" : "";
 		const sql = `SELECT ${columns.map(column => column).join(", ")} FROM ${tableName} WHERE ${constraints.map(constraint => `${constraint.row} = ?`).join(` ${and} `)}`;
+		console.log('\n' + sql);
 		// let sql = `SELECT ${columns.map(column => column).join(", ")} FROM ${tableName}`;
 		DB.get(sql, constraints.map(constraint => constraint.value), (err, rows) => {
 			if (err) { 
@@ -77,9 +78,9 @@ async function queryTable(DB, tableName, columns, constraints) {
 
 function queryAllTable(DB, tableName) {
 	const sql = `SELECT * FROM ${tableName}`;
-	DB.all(sql, [], function (err, row) {
+	DB.all(sql, [], function (err, rows) {
 		if (err) {  return console.error(err.message) };
-		console.log(row);
+		console.log(rows);
 	});
 }
 

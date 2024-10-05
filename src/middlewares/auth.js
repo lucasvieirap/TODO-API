@@ -18,7 +18,8 @@ function auth(req, res, next) {
 		}
 
 		console.log("\nAUTHORIZATION MIDDLEWARE === ")
-		console.log(`Authorization Complete token: ${verifiedTokenString}\n`);
+		console.log(`Token Verification Successful:`);
+		console.log(`VerifiedToken: ${verifiedTokenString}`);
 		next();
 	} catch( err ) {
 		const message = {"message": "Unauthorized", "err": err.message}
