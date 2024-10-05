@@ -9,8 +9,8 @@ function updateTodo(req, res, DB) {
 	const { title, description } = req.body;
 
 	async function updateTodoFromDB() {
-		try {
-			DB.serialize(async() => {
+		DB.serialize(async() => {
+			try {
 				const row = await DBModules.queryTable(
 					DB, 
 					"todos", 
@@ -19,27 +19,20 @@ function updateTodo(req, res, DB) {
 						{ "row": "id", "value": todoId },
 						{ "row": "byUser", "value": username }
 					]
-				);
-				if (row === undefined) {
-					const message = {"message": "Forbidden"};
-					res.status(403).send(JSON.stringify(message)+'\n');
-					return;
-				}
+				).catch((err) => { throw new Error("Forbidden") });
 				const object = {
 					"title": title || row.title, 
 					"description": description || row.description
 				};
-				DBModules.updateTable(
+				const updateChanges = await DBModules.updateTable(
 					DB, 
 					"todos", 
 					[
-						{"row": "title", "newValue": `"${object.title}"`},
-						{"row": "description", "newValue": `"${object.description}"`}
+						{"row":"title", "newValue":`"${object.title}"`},
+						{"row":"description", "newValue":`"${object.description}"`}
 					],
-					[
-						{"row": "id", "value": todoId},
-					]
-				);
+					[{"row": "id", "value": todoId}]
+				).catch((err) => { throw new Error("Update Failed") });
 				const updatedRow = await DBModules.queryTable(
 					DB, 
 					"todos", 
@@ -48,16 +41,19 @@ function updateTodo(req, res, DB) {
 						{ "row": "id", "value": todoId },
 						{ "row": "byUser", "value": username }
 					]
-				);
-				res.status(200).send(JSON.stringify(updatedRow, undefined, 2) + '\n');
+				).catch((err) => { throw new Error("Update Failed") });
+				console.log("\nRows Changed: ", updatedRow, '\n');
+
+				const updatedRowString = JSON.stringify(updatedRow, undefined, 2);
+				res.status(200).send(updatedRowString + '\n');
 				return;
 
-			})
-		} catch (err) {
-			const message = {"message": "Malformed Request", "err": err.message}
-			res.status(400).send(JSON.stringify(message)+'\n');
-			return;
-		}
+			} catch (err) {
+				const message = {"message": err.message}
+				res.status(400).send(JSON.stringify(message)+'\n');
+				return;
+			}
+		})
 	}
 	updateTodoFromDB();
 }

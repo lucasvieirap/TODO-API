@@ -64,13 +64,15 @@ async function queryTable(DB, tableName, columns, constraints) {
 	return new Promise((resolve, reject) => {
 		const and = constraints.length > 1 ? "AND" : "";
 		const sql = `SELECT ${columns.map(column => column).join(", ")} FROM ${tableName} WHERE ${constraints.map(constraint => `${constraint.row} = ?`).join(` ${and} `)}`;
-		console.log('\n' + sql);
 		// let sql = `SELECT ${columns.map(column => column).join(", ")} FROM ${tableName}`;
 		DB.get(sql, constraints.map(constraint => constraint.value), (err, rows) => {
 			if (err) { 
-				console.log(err.message) 
 				reject(err);
 			};
+			if (rows === undefined) {
+				reject(new Error("No Row Found"));
+			}
+			console.log('\n' + sql);
 			resolve(rows);
 		})
 	})
@@ -85,12 +87,15 @@ function queryAllTable(DB, tableName) {
 }
 
 function updateTable(DB, tableName, columns, constraints) {
-	const and = constraints.length > 1 ? "AND" : "";
-	const sql = `UPDATE ${tableName} SET ${columns.map(column => `${column.row} = ${column.newValue}`)} WHERE ${constraints.map(constraint => `${constraint.row} = ${constraint.value}`).join(` ${and} `)}`;
-	console.log(sql);
-	DB.run(sql, [], function (err, row) {
-		if (err) {  return console.error(err.message) };
-	});
+	return new Promise((resolve, reject) => {
+		const and = constraints.length > 1 ? "AND" : "";
+		const sql = `UPDATE ${tableName} SET ${columns.map(column => `${column.row} = ${column.newValue}`)} WHERE ${constraints.map(constraint => `${constraint.row} = ${constraint.value}`).join(` ${and} `)}`;
+		DB.run(sql, [], function (err, changes) {
+			if (err) { reject( new Error(err.message)) };
+			console.log('\n' + sql);
+			resolve(changes);
+		});
+	})
 }
 
 module.exports = { connectToDb, createTable, _dropTable, insertTable, deleteTable, queryMultipleTable, queryTable, queryAllTable, updateTable };
